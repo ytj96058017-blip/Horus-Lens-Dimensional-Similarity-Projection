@@ -9,7 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Black+Han+Sans&family=Jua&family=Inter:wght@400;600;700;900&family=JetBrains+Mono:wght@500;700;800&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Jua', 'Inter', sans-serif; }
+        body { 
+            font-family: 'Jua', 'Inter', sans-serif;
+            color: #f8fafc;
+            background-color: #030712;
+            margin: 0;
+            padding: 0;
+        }
+        .hidden { display: none !important; }
         .font-hieroglyph { font-family: 'Cinzel', 'Black Han Sans', serif; }
         .font-tech { font-family: 'Orbitron', sans-serif; }
         .font-mono-code { font-family: 'JetBrains Mono', monospace; }
@@ -110,7 +117,6 @@
         </p>
     </header>
 
-    <!-- Main Workspace Container -->
     <main class="max-w-6xl w-full mx-auto flex-1 flex flex-col justify-center gap-3">
 
         <!-- 1. Lobby Screen -->
@@ -184,7 +190,7 @@
             <!-- Quick Reset Bar for Ghost Cleanup -->
             <div class="flex items-center justify-between px-1">
                 <div class="flex items-center gap-2 text-xs font-mono-code text-amber-400">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
                     <span>LIVE_OPERATION // 5-WAVE DIMENSIONAL SIMILARITY TRIAL</span>
                 </div>
                 <button onclick="resetCurrentRoomData()" class="px-3 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-500/60 rounded-xl text-xs text-rose-300 font-bold transition active:scale-95 shadow flex items-center gap-1.5 font-mono-code">
@@ -395,7 +401,8 @@
 
                     <!-- Step 3 Fire Button (Opens Payload Modal) -->
                     <div id="fire-projection-control" class="hidden flex flex-col items-center gap-2 w-full max-w-md">
-                        <button onclick="openProjectionModal()" class="w-full py-4 bg-gradient-to-r from-amber-400 via-yellow-300 to-cyan-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 font-hieroglyph text-xl md:text-2xl rounded-2xl shadow-xl border-2 border-white active:scale-95 transition animate-pulse flex items-center justify-center gap-2">
+                        <!-- ★ 연타 방지 가드 적용: id="fire-action-btn" 추가 -->
+                        <button id="fire-action-btn" onclick="openProjectionModal()" class="w-full py-4 bg-gradient-to-r from-amber-400 via-yellow-300 to-cyan-400 hover:from-amber-300 hover:to-yellow-200 text-slate-950 font-hieroglyph text-xl md:text-2xl rounded-2xl shadow-xl border-2 border-white active:scale-95 transition animate-pulse flex items-center justify-center gap-2">
                             <span>☀️</span><span>호루스 태양 광선 방출! (PROJECTION & STRIKE! 💥)</span>
                         </button>
                         <span class="text-xs text-yellow-200 font-semibold font-mono-code">> 차원 비례 100% 완전 정렬! 넓이비 m²:n² 에너지 증폭포를 격발하세요!</span>
@@ -533,6 +540,8 @@
             </button>
         </div>
     </div>
+
+    <!-- Web Audio API Sound Synthesizer -->
     <script>
         class SoundFX {
             constructor() {
@@ -675,6 +684,9 @@
         let lastRenderedStage = -1;
         let lastRenderedWave = -1;
 
+        // ★ [연타 방지 가드 플래그] 4단계 태양 광선 발사 버튼 중복 클릭 방지
+        let isActionProcessing = false;
+
         /*
            중2 2학기 기하 핵심 교육과정: 도형의 닮음 5대 웨이브
            Wave 1: 삼각형의 닮음 기본 (AA 닮음: 두 쌍의 각 일치 ➔ 닮음비 m:n ➔ 대응변 x 계산)
@@ -721,11 +733,9 @@
                     m = chosen.m; n = chosen.n;
                     const scaleFactor = chosen.k;
 
-                    // 대응변: 작은 삼각형 변 a = m * k, 큰 삼각형 대응변 b = n * k
                     const sideA = m * scaleFactor;
                     const sideB = n * scaleFactor;
 
-                    // 다른 변: 작은 삼각형 변 c = m * 3, 큰 삼각형 대응변 x = n * 3
                     const mult = (scaleFactor === 2 ? 3 : 2);
                     const sideC = m * mult;
                     targetX = n * mult;
@@ -790,7 +800,7 @@
                     correctRatioIdx = 0;
 
                 } else {
-                    // Wave 5: Ancient Sphinx Boss (Right triangle similarity & Area ratio m² : n²)
+                    // Wave 5: Ancient Sphinx Boss (Right Triangle with Altitude & Area Ratio m² : n²)
                     condition = "AA"; // Right triangle with altitude to hypotenuse
                     const sphinxBosses = [
                         { m: 2, n: 3, m2: 4, n2: 9, smallLeg: 6, bigLeg: 9, otherSmall: 8, x: 12, sSmall: 24, sBig: 54 },
@@ -861,7 +871,7 @@
             return mission;
         }
 
-        function triggerLockoutPenalty(customSec = 5.0) {
+        function triggerLockoutPenalty() {
             if (isLockedOut) return;
             isLockedOut = true;
             sfx.error();
@@ -869,15 +879,14 @@
             const lockoutBox = document.getElementById('lockout-penalty-box');
             const timerEl = document.getElementById('lockout-timer-num');
             lockoutBox.classList.remove('hidden');
-            timerEl.innerText = customSec.toFixed(1);
+            timerEl.innerText = '5.0';
 
             if (lockoutTimerInterval) clearInterval(lockoutTimerInterval);
             const startAt = Date.now();
-            const totalMs = customSec * 1000;
 
             lockoutTimerInterval = setInterval(() => {
                 const elapsed = Date.now() - startAt;
-                const left = Math.max(0, (totalMs - elapsed) / 1000);
+                const left = Math.max(0, (5000 - elapsed) / 1000);
                 timerEl.innerText = left.toFixed(1);
 
                 if (left <= 0) {
@@ -949,19 +958,18 @@
                 updatedAt: Date.now()
             };
         }
+
         window.joinTeam = async function(team) {
-            const nameInput = document.getElementById('player-name');
-            const codeInput = document.getElementById('room-code');
-            const name = (nameInput ? nameInput.value.trim() : '') || `광학관_${Math.floor(Math.random()*900+100)}`;
-            const code = (codeInput ? codeInput.value.trim() : '') || 'horus201';
+            const name = document.getElementById('player-name').value.trim() || `광학관_${Math.floor(Math.random()*900+100)}`;
+            const code = document.getElementById('room-code').value.trim() || 'horus201';
 
             currentUserName = name;
             currentRoomCode = code;
             myTeam = team;
+            isActionProcessing = false;
 
             const myMemberObj = { id: myPlayerId, name: currentUserName, lastSeen: Date.now(), joinedAt: myJoinedAt };
 
-            // Local zero-cost broadcast channel
             try {
                 if (window.BroadcastChannel) {
                     if (bc) bc.close();
@@ -1011,7 +1019,6 @@
             window.addEventListener('beforeunload', leaveRoomCleanup);
         };
 
-        // Teacher Spectator / Broadcaster Entry Function
         window.joinSpectator = async function() {
             const codeInput = document.getElementById('room-code');
             const code = (codeInput ? codeInput.value.trim() : '') || 'horus201';
@@ -1019,8 +1026,8 @@
             currentUserName = '교사 중계석';
             currentRoomCode = code;
             myTeam = 'spectator';
+            isActionProcessing = false;
 
-            // Connect BroadcastChannel for listening to pings and state
             try {
                 if (window.BroadcastChannel) {
                     if (bc) bc.close();
@@ -1042,7 +1049,6 @@
             initLensCanvas();
             sfx.victoryFanfare();
 
-            // Load existing room state without adding teacher to blueMembers or redMembers!
             try {
                 if (db) {
                     const roomRef = doc(db, 'horus_lens_rooms', currentRoomCode);
@@ -1060,7 +1066,7 @@
         };
 
         async function leaveRoomCleanup() {
-            if (!currentRoomCode || !myTeam || !db) return;
+            if (!currentRoomCode || !myTeam || myTeam === 'spectator' || !db) return;
             try {
                 const roomRef = doc(db, 'horus_lens_rooms', currentRoomCode);
                 const snap = await getDoc(roomRef);
@@ -1107,21 +1113,18 @@
             data.redMembers = cleanMemberList(data.redMembers || []);
             lastKnownRoomData = data;
 
-            // Handle Solar Burst Projection Shockwave
             if (data.lastBurst && (!window.lastObservedBurstId || window.lastObservedBurstId !== data.lastBurst.id)) {
                 window.lastObservedBurstId = data.lastBurst.id;
                 triggerProjectionReflectEvent(data.lastBurst);
             }
 
-            // Handle Tactical Starlight Ping
             if (data.lastPing && (!window.lastObservedPingId || window.lastObservedPingId !== data.lastPing.id)) {
                 window.lastObservedPingId = data.lastPing.id;
-                if (data.lastPing.team === myTeam) {
+                if (myTeam === 'spectator' || data.lastPing.team === myTeam) {
                     addTacticalPingCoords(data.lastPing.x, data.lastPing.y, data.lastPing.sender);
                 }
             }
 
-            // Handle Solar Eclipse Dust EMP
             if (data.dustTarget === myTeam && (!window.lastObservedDustId || window.lastObservedDustId !== data.dustId)) {
                 window.lastObservedDustId = data.dustId;
                 activateDustCover();
@@ -1529,12 +1532,28 @@
         };
 
         window.openProjectionModal = function() {
+            // ★ [연타 방지 가드 1] 이미 처리 중이면 모달 오픈 차단
+            if (isActionProcessing) return;
             document.getElementById('payload-modal').classList.remove('hidden');
         };
 
         window.choosePayload = async function(payloadType) {
+            // ★ [연타 방지 가드 2] 즉시 잠금 설정 및 버튼 비활성화
+            if (isActionProcessing) return;
+            isActionProcessing = true;
+
+            const fireActionBtn = document.getElementById('fire-action-btn');
+            if (fireActionBtn) {
+                fireActionBtn.disabled = true;
+                fireActionBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
             document.getElementById('payload-modal').classList.add('hidden');
-            if (!lastKnownRoomData) return;
+            if (!lastKnownRoomData) {
+                isActionProcessing = false;
+                return;
+            }
+
             const data = lastKnownRoomData;
             const enemyTeam = myTeam === 'blue' ? 'red' : 'blue';
             const mission = myTeam === 'blue' ? data.blueMission : data.redMission;
@@ -1577,6 +1596,7 @@
 
                 sfx.lensIgnite();
                 hitData.updatedAt = Date.now();
+                isActionProcessing = false;
                 await syncStateUpdate(hitData);
             }, 850);
 
@@ -1970,12 +1990,10 @@
             const scale = Math.min(canvas.width, canvas.height) * 0.46;
 
             if (wType === "triangle_aa" || wType === "triangle_sas") {
-                // Generous layout to avoid label overlapping
                 const leftCx = cx - scale * 0.72;
                 const rightCx = cx + scale * 0.72;
                 const baselineY = cy + scale * 0.32;
 
-                // Small Triangle ABC (Scaled by m/n with readable minimum)
                 const ratioFactor = Math.max(0.48, Math.min(0.75, m / n));
                 const sBase = scale * 0.58 * ratioFactor;
                 const sHeight = scale * 0.65 * ratioFactor;
@@ -1983,36 +2001,28 @@
                 const ptB = { x: leftCx - sBase / 2, y: baselineY };
                 const ptC = { x: leftCx + sBase / 2, y: baselineY };
 
-                // Big Triangle DEF (Target with x)
                 const bBase = scale * 0.62;
                 const bHeight = scale * 0.7;
                 const ptD = { x: rightCx, y: baselineY - bHeight };
                 const ptE = { x: rightCx - bBase / 2, y: baselineY };
                 const ptF = { x: rightCx + bBase / 2, y: baselineY };
 
-                // Stage >= 1: Volumetric Horus Light Cone & Raycasting
                 if (currentStage >= 1) {
                     drawVolumetricProjectionCone(ptA, ptB, ptC, ptD, ptE, ptF, currentStage);
                     drawCentralHorusLensCore(cx, cy - 8, currentStage, mission);
                 } else {
-                    // Central Standby Horus Lens with prominent sacred eye vector
                     drawStandbyLensPrism(cx, cy - 8);
                 }
 
-                // 1. Draw Small Source Triangle ABC (Cyan Glow)
                 drawPolygonShape([ptA, ptB, ptC], '#38bdf8', 'rgba(56, 189, 248, 0.12)');
                 drawNode(ptA.x, ptA.y, "A", -14, -14);
                 drawNode(ptB.x, ptB.y, "B", -18, -12);
                 drawNode(ptC.x, ptC.y, "C", 18, -12);
 
-                // Angle arcs on Triangle ABC
                 drawAngleArc(ptA, ptB, ptC, '#38bdf8', 16);
                 drawAngleArc(ptB, ptA, ptC, '#38bdf8', 16);
-
-                // Dimension Tag on Source Triangle (Clear of node labels)
                 drawDimensionBanner((ptB.x + ptC.x) / 2, baselineY + 22, `기준 대응변 BC = ${mission.givenKnownSide}cm`, '#38bdf8');
 
-                // 2. Draw Big Target Triangle DEF (Gold Glow)
                 const isTargetSolved = currentStage >= 3;
                 const targetColor = isTargetSolved ? '#facc15' : 'rgba(245, 158, 11, 0.75)';
                 const targetFill = isTargetSolved ? 'rgba(250, 204, 21, 0.18)' : 'rgba(245, 158, 11, 0.06)';
@@ -2022,18 +2032,15 @@
                 drawNode(ptE.x, ptE.y, "E", -18, -12);
                 drawNode(ptF.x, ptF.y, "F", 18, -12);
 
-                // Angle arcs on Triangle DEF
                 drawAngleArc(ptD, ptE, ptF, '#f59e0b', 18);
                 drawAngleArc(ptE, ptD, ptF, '#f59e0b', 18);
 
-                // Dimension Tag on Target Triangle (Target x)
                 const targetText = isTargetSolved 
-                    ? `목표 선분 EF = x = ${mission.targetX}cm (100% 락온!)` 
+                    ? `목표 선분 EF = x = ${mission.targetX}cm (100% 루프 락온!)` 
                     : `목표 선분 EF = x (?) [대응변]`;
                 drawDimensionBanner((ptE.x + ptF.x) / 2, baselineY + 22, targetText, isTargetSolved ? '#fef08a' : '#fca5a5', isTargetSolved);
 
             } else if (wType === "parallel_segments") {
-                // Triangle ABC with Parallel Segment DE (BC // DE)
                 const topPt = { x: cx, y: cy - scale * 0.72 };
                 const bLeft = { x: cx - scale * 0.8, y: cy + scale * 0.45 };
                 const bRight = { x: cx + scale * 0.8, y: cy + scale * 0.45 };
@@ -2042,10 +2049,8 @@
                 const ptD = { x: topPt.x + (bLeft.x - topPt.x) * ratio, y: topPt.y + (bLeft.y - topPt.y) * ratio };
                 const ptE = { x: topPt.x + (bRight.x - topPt.x) * ratio, y: topPt.y + (bRight.y - topPt.y) * ratio };
 
-                // Draw Big Triangle ABC
                 drawPolygonShape([topPt, bLeft, bRight], '#38bdf8', 'rgba(56, 189, 248, 0.08)');
 
-                // Parallel line DE (Glowing Gold)
                 ctx.strokeStyle = '#facc15';
                 ctx.lineWidth = 3.5;
                 ctx.shadowBlur = 14;
@@ -2055,7 +2060,6 @@
                 ctx.lineTo(ptE.x, ptE.y);
                 ctx.stroke();
 
-                // Draw Parallel Arrows on DE and BC
                 drawParallelArrow((ptD.x + ptE.x) / 2, ptD.y);
                 drawParallelArrow((bLeft.x + bRight.x) / 2, bLeft.y);
 
@@ -2065,7 +2069,6 @@
                 drawNode(ptD.x, ptD.y, "D", -18, -4);
                 drawNode(ptE.x, ptE.y, "E", 18, -4);
 
-                // Dimension Banners
                 drawDimensionBanner((ptD.x + ptE.x) / 2, ptD.y - 14, `평행선 DE = ${mission.givenKnownSide}cm`, '#fde047');
                 
                 const isTargetSolved = currentStage >= 3;
@@ -2081,14 +2084,12 @@
                 }
 
             } else if (wType === "hourglass_aa") {
-                // Hourglass AB // CD intersecting at O
                 const nodeO = { x: cx, y: cy };
                 const ptA = { x: cx - scale * 0.65, y: cy - scale * 0.46 };
                 const ptB = { x: cx + scale * 0.45, y: cy - scale * 0.46 };
                 const ptC = { x: cx - scale * 0.45, y: cy + scale * 0.52 };
                 const ptD = { x: cx + scale * 0.85, y: cy + scale * 0.52 };
 
-                // Draw Triangles
                 drawPolygonShape([ptA, ptB, nodeO], '#38bdf8', 'rgba(56, 189, 248, 0.08)');
                 const isTargetSolved = currentStage >= 3;
                 drawPolygonShape([nodeO, ptC, ptD], isTargetSolved ? '#facc15' : '#f59e0b', 'rgba(245, 158, 11, 0.08)');
@@ -2115,7 +2116,6 @@
                 }
 
             } else {
-                // Wave 5: Ancient Sphinx Boss (Right Triangle with Altitude & Area Ratio m²:n²)
                 const ptA = { x: cx - scale * 0.72, y: cy + scale * 0.44 };
                 const ptB = { x: cx + scale * 0.72, y: cy + scale * 0.44 };
                 const ptC = { x: cx - scale * 0.72, y: cy - scale * 0.44 };
@@ -2123,7 +2123,6 @@
 
                 drawPolygonShape([ptA, ptB, ptC], '#38bdf8', 'rgba(56, 189, 248, 0.08)');
 
-                // Altitude CH
                 ctx.strokeStyle = '#f59e0b';
                 ctx.lineWidth = 3;
                 ctx.beginPath();
@@ -2131,7 +2130,6 @@
                 ctx.lineTo(ptH.x, ptH.y);
                 ctx.stroke();
 
-                // Right angle squares
                 ctx.strokeStyle = '#facc15';
                 ctx.lineWidth = 1.5;
                 ctx.strokeRect(ptA.x, ptA.y - 12, 12, 12);
@@ -2142,7 +2140,6 @@
                 drawNode(ptC.x, ptC.y, "C", -16, -14);
                 drawNode(ptH.x, ptH.y, "H", 0, 18);
 
-                // Boss Threat Banner
                 const pulse = Math.sin(Date.now() / 160) * 4;
                 ctx.font = '26px sans-serif';
                 ctx.textAlign = 'center';
@@ -2173,7 +2170,6 @@
         function drawVolumetricProjectionCone(ptA, ptB, ptC, ptD, ptE, ptF, currentStage) {
             ctx.save();
 
-            // Volumetric light beam cone between small and big triangle
             const lightGrad = ctx.createLinearGradient(ptA.x, ptA.y, ptD.x, ptD.y);
             lightGrad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
             lightGrad.addColorStop(0.5, 'rgba(250, 204, 21, 0.2)');
@@ -2188,18 +2184,14 @@
             ctx.closePath();
             ctx.fill();
 
-            // Golden Raycast Lines connecting corresponding vertices
             ctx.strokeStyle = currentStage >= 2 ? '#facc15' : 'rgba(250, 204, 21, 0.55)';
             ctx.lineWidth = currentStage >= 2 ? 2 : 1.5;
             ctx.shadowBlur = currentStage >= 2 ? 14 : 6;
             ctx.shadowColor = '#facc15';
             ctx.setLineDash([8, 6]);
 
-            // Raycast A -> D
             ctx.beginPath(); ctx.moveTo(ptA.x, ptA.y); ctx.lineTo(ptD.x, ptD.y); ctx.stroke();
-            // Raycast B -> E
             ctx.beginPath(); ctx.moveTo(ptB.x, ptB.y); ctx.lineTo(ptE.x, ptE.y); ctx.stroke();
-            // Raycast C -> F
             ctx.beginPath(); ctx.moveTo(ptC.x, ptC.y); ctx.lineTo(ptF.x, ptF.y); ctx.stroke();
 
             ctx.setLineDash([]);
@@ -2222,7 +2214,7 @@
             ctx.shadowBlur = isActive ? 22 : 12;
             ctx.shadowColor = glowColor;
 
-            // 1. Eyebrow Curve (Bold arch above eye)
+            // 1. Eyebrow Curve
             ctx.beginPath();
             ctx.moveTo(-32, -18);
             ctx.quadraticCurveTo(0, -32, 34, -20);
@@ -2241,20 +2233,20 @@
             ctx.bezierCurveTo(-16, 12, 14, 12, 32, -4);
             ctx.stroke();
 
-            // 4. Extended Cosmetic Teardrop Eyeliner (Inner and outer flick)
+            // 4. Teardrop Eyeliner
             ctx.beginPath();
             ctx.moveTo(32, -4);
             ctx.quadraticCurveTo(44, -2, 48, -8);
             ctx.stroke();
 
-            // 5. Falcon Tear Mark (Vertical Drop under the pupil)
+            // 5. Falcon Tear Mark
             ctx.beginPath();
             ctx.moveTo(-2, 7);
             ctx.quadraticCurveTo(-1, 22, -1, 32);
             ctx.lineWidth = 3.6;
             ctx.stroke();
 
-            // 6. Falcon Spiral Tail (Curling ancient plumage flourish)
+            // 6. Falcon Spiral Tail
             ctx.beginPath();
             ctx.lineWidth = 3;
             ctx.moveTo(14, 5);
@@ -2262,7 +2254,7 @@
             ctx.bezierCurveTo(2, 26, 6, 18, 14, 20);
             ctx.stroke();
 
-            // 7. Radiant Central Iris & Pupil Core
+            // 7. Radiant Central Iris & Pupil
             ctx.save();
             const irisR = isActive ? 8.5 : 7;
             const irisGrad = ctx.createRadialGradient(0, -5, 1, 0, -5, irisR);
@@ -2276,7 +2268,6 @@
             ctx.arc(0, -5, irisR, 0, Math.PI * 2);
             ctx.fill();
 
-            // Specular Reflection Dot in pupil
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(-2.5, -7.5, 2, 0, Math.PI * 2);
@@ -2286,9 +2277,6 @@
             ctx.restore();
         }
 
-        // ==========================================
-        // 𓂀 CENTRAL ROTATING HORUS LENS CORE (ACTIVE)
-        // ==========================================
         function drawCentralHorusLensCore(x, y, stage, mission) {
             ctx.save();
             ctx.translate(x, y);
@@ -2296,7 +2284,6 @@
             const pulse = Math.sin(Date.now() / 250) * 3;
             const lensR = 48 + pulse;
 
-            // 1. Outer Golden Astral Sundial Ring
             ctx.save();
             ctx.rotate(Date.now() / 450);
             ctx.strokeStyle = stage >= 3 ? '#facc15' : '#38bdf8';
@@ -2307,7 +2294,6 @@
             ctx.stroke();
             ctx.restore();
 
-            // 2. Translucent Obsidian Glass Lens Disc
             const lensGrad = ctx.createRadialGradient(0, 0, 8, 0, 0, lensR);
             lensGrad.addColorStop(0, stage >= 3 ? 'rgba(254, 240, 138, 0.35)' : 'rgba(56, 189, 248, 0.28)');
             lensGrad.addColorStop(0.65, 'rgba(15, 23, 42, 0.85)');
@@ -2324,12 +2310,10 @@
             ctx.fill();
             ctx.stroke();
 
-            // 3. Handcrafted Magnificent Vector Eye of Horus
             const eyeColor = stage >= 3 ? '#fef08a' : '#38bdf8';
             const eyeGlow = stage >= 3 ? 'rgba(250, 204, 21, 0.9)' : 'rgba(56, 189, 248, 0.85)';
             drawEyeOfHorusVector(ctx, 0, 1, 0.82, eyeColor, eyeGlow, true);
 
-            // 4. Lens Status Telemetry Pill
             ctx.font = 'bold 10px "JetBrains Mono", monospace';
             ctx.fillStyle = stage >= 3 ? '#fef08a' : '#7dd3fc';
             ctx.textAlign = 'center';
@@ -2339,9 +2323,6 @@
             ctx.restore();
         }
 
-        // ==========================================
-        // 𓂀 CENTRAL STANDBY HORUS LENS PRISM
-        // ==========================================
         function drawStandbyLensPrism(x, y) {
             ctx.save();
             ctx.translate(x, y);
@@ -2349,7 +2330,6 @@
             const pulse = Math.sin(Date.now() / 320) * 2;
             const lensR = 44 + pulse;
 
-            // 1. Mystical Outer Dashed Golden Halo
             ctx.save();
             ctx.rotate(-Date.now() / 650);
             ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
@@ -2360,7 +2340,6 @@
             ctx.stroke();
             ctx.restore();
 
-            // 2. Obsidian Glass Disc
             const bgGrad = ctx.createRadialGradient(0, 0, 4, 0, 0, lensR);
             bgGrad.addColorStop(0, 'rgba(30, 27, 75, 0.55)');
             bgGrad.addColorStop(0.7, 'rgba(15, 23, 42, 0.85)');
@@ -2376,10 +2355,8 @@
             ctx.fill();
             ctx.stroke();
 
-            // 3. Bold Golden Vector Eye of Horus in Standby
             drawEyeOfHorusVector(ctx, 0, 1, 0.74, '#fbbf24', 'rgba(245, 158, 11, 0.75)', false);
 
-            // 4. Subtle Telemetry Subtitle
             ctx.font = 'bold 9px "JetBrains Mono", monospace';
             ctx.fillStyle = '#fde68a';
             ctx.textAlign = 'center';
@@ -2387,9 +2364,6 @@
             ctx.restore();
         }
 
-        // ==========================================
-        // 📐 GEOMETRIC UTILITY HELPERS (No Overlaps)
-        // ==========================================
         function drawPolygonShape(points, strokeColor, fillColor, lineWidth = 2.5) {
             if (!points || points.length === 0) return;
             ctx.save();
@@ -2423,7 +2397,6 @@
             ctx.fill();
             ctx.stroke();
 
-            // Distinct Node Label
             ctx.font = 'bold 12px "Cinzel", serif';
             ctx.fillStyle = '#fef08a';
             ctx.textAlign = 'center';
